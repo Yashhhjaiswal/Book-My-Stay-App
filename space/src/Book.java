@@ -1,73 +1,142 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-// Inventory Class (Centralized Management)
+// ----------- Room Domain Model -----------
+
+abstract class Room {
+    private String roomType;
+    private int beds;
+    private double price;
+
+    public Room(String roomType, int beds, double price) {
+        this.roomType = roomType;
+        this.beds = beds;
+        this.price = price;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+
+    public int getBeds() {
+        return beds;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public abstract void displayDetails();
+}
+
+class SingleRoom extends Room {
+    public SingleRoom() {
+        super("Single Room", 1, 2000);
+    }
+
+    public void displayDetails() {
+        System.out.println("Room: " + getRoomType());
+        System.out.println("Beds: " + getBeds());
+        System.out.println("Price: ₹" + getPrice());
+    }
+}
+
+class DoubleRoom extends Room {
+    public DoubleRoom() {
+        super("Double Room", 2, 3500);
+    }
+
+    public void displayDetails() {
+        System.out.println("Room: " + getRoomType());
+        System.out.println("Beds: " + getBeds());
+        System.out.println("Price: ₹" + getPrice());
+    }
+}
+
+class SuiteRoom extends Room {
+    public SuiteRoom() {
+        super("Suite Room", 3, 6000);
+    }
+
+    public void displayDetails() {
+        System.out.println("Room: " + getRoomType());
+        System.out.println("Beds: " + getBeds());
+        System.out.println("Price: ₹" + getPrice());
+    }
+}
+
+// ----------- Inventory (State Holder) -----------
+
 class RoomInventory {
+    private Map<String, Integer> inventory = new HashMap<>();
 
-    private Map<String, Integer> inventory;
-
-    // Constructor - Initialize inventory
     public RoomInventory() {
-        inventory = new HashMap<>();
-
-        // Initial room availability
         inventory.put("Single Room", 5);
-        inventory.put("Double Room", 3);
+        inventory.put("Double Room", 0); // Example: unavailable
         inventory.put("Suite Room", 2);
     }
 
-    // Get availability
     public int getAvailability(String roomType) {
         return inventory.getOrDefault(roomType, 0);
     }
 
-    // Update availability
-    public void updateAvailability(String roomType, int newCount) {
-        if (inventory.containsKey(roomType)) {
-            inventory.put(roomType, newCount);
-        } else {
-            System.out.println("Room type not found!");
-        }
+    public Map<String, Integer> getAllAvailability() {
+        return inventory; // read-only usage (no modification in search)
+    }
+}
+
+// ----------- Search Service (Read-Only) -----------
+
+class RoomSearchService {
+
+    private RoomInventory inventory;
+
+    public RoomSearchService(RoomInventory inventory) {
+        this.inventory = inventory;
     }
 
-    // Display full inventory
-    public void displayInventory() {
-        System.out.println("Current Room Inventory:");
-        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
-            System.out.println(entry.getKey() + " → Available: " + entry.getValue());
+    public void searchAvailableRooms(List<Room> rooms) {
+
+        System.out.println("Available Rooms:\n");
+
+        for (Room room : rooms) {
+            int available = inventory.getAvailability(room.getRoomType());
+
+            // Filter only available rooms
+            if (available > 0) {
+                room.displayDetails();
+                System.out.println("Available: " + available);
+                System.out.println("----------------------");
+            }
         }
     }
 }
 
-// Main Class
+// ----------- Main Class -----------
+
 public class Book {
 
     public static void main(String[] args) {
 
         System.out.println("=====================================");
-        System.out.println("   Book My Stay App - v3.0");
-        System.out.println(" Centralized Room Inventory");
+        System.out.println("   Book My Stay App - v4.0");
+        System.out.println(" Room Search & Availability");
         System.out.println("=====================================\n");
 
         // Initialize inventory
         RoomInventory inventory = new RoomInventory();
 
-        // Display initial inventory
-        inventory.displayInventory();
-        System.out.println();
+        // Create room objects
+        List<Room> rooms = new ArrayList<>();
+        rooms.add(new SingleRoom());
+        rooms.add(new DoubleRoom());
+        rooms.add(new SuiteRoom());
 
-        // Example: Check availability
-        System.out.println("Checking availability for Single Room:");
-        System.out.println("Available: " + inventory.getAvailability("Single Room"));
-        System.out.println();
+        // Search service (read-only)
+        RoomSearchService searchService = new RoomSearchService(inventory);
 
-        // Example: Update availability
-        System.out.println("Updating Single Room availability to 4...\n");
-        inventory.updateAvailability("Single Room", 4);
+        // Perform search
+        searchService.searchAvailableRooms(rooms);
 
-        // Display updated inventory
-        inventory.displayInventory();
-
-        System.out.println("\nApplication terminated successfully.");
+        System.out.println("\nSearch completed. No changes made to inventory.");
     }
 }
